@@ -1,0 +1,83 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import './Auth.css';
+
+const Login: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login, isAuthenticated } = useAuth();
+  const { showError } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Zaten giriş yapılmışsa dashboard'a yönlendir
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await login({ email, password });
+      navigate('/dashboard');
+    } catch (err: any) {
+      showError(err.response?.data?.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <Link to="/" className="auth-logo">
+          <h1>Benimle İşe Gel</h1>
+        </Link>
+        <h2>Giriş Yap</h2>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="email">E-posta</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="ornek@email.com"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Şifre</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+          </button>
+        </form>
+
+        <p className="auth-link">
+          Hesabınız yok mu? <Link to="/signup">Kayıt Ol</Link>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default Login;
+
